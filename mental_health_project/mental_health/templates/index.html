@@ -14,11 +14,12 @@
         <h1>Mental Health Journal</h1>
         <form action="{% url 'analyze' %}" method="POST">
             {% csrf_token %}
+            
             <label for="name">Name</label>
             <input type="text" id="name" name="name">
 
             <label for="location">Geographic Location</label>
-            <input type="text" id="location" name="location" required>
+            <input type="text" id="location" name="location" required placeholder="Fetching location...">
             
             <label for="journal-entry">Journal Entry</label>
             <textarea id="journal-entry" name="entry" rows="6" required></textarea>
@@ -26,6 +27,39 @@
             <button type="submit" class="btn-primary">Analyze</button>
         </form>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+
+                        // Fetch human-readable address using OpenStreetMap's Nominatim API
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const locationInput = document.getElementById("location");
+                                locationInput.value = data.display_name || `${latitude}, ${longitude}`;
+                            })
+                            .catch(error => {
+                                console.error("Error getting location:", error);
+                                document.getElementById("location").value = "Unable to retrieve location";
+                            });
+                    },
+                    function(error) {
+                        console.error("Geolocation error:", error);
+                        document.getElementById("location").value = "Location access denied";
+                    },
+                    { enableHighAccuracy: true } 
+                );
+            } else {
+                console.log("Geolocation is not supported by this browser.");
+                document.getElementById("location").value = "Geolocation not supported";
+            }
+        });
+    </script>
 
 </body>
 </html>
