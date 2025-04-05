@@ -36,7 +36,7 @@
                         const latitude = position.coords.latitude;
                         const longitude = position.coords.longitude;
 
-                        // Fetch human-readable address using OpenStreetMap's Nominatim API
+                        // get address from the users computer (given their consent)
                         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
                             .then(response => response.json())
                             .then(data => {

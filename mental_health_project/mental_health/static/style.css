@@ -17,7 +17,7 @@ body {
     padding: 2rem 0;
 }
 
-/* main continer for the form input and results*/
+/* Main container for the form input and results */
 .container {
     background: white;
     padding: 2rem;
@@ -97,27 +97,39 @@ input, textarea {
     font-size: 1rem;
 }
 
-
-button, .btn-primary {
-    display: block;
+/* General Button Style */
+.btn {
+    display: inline-block;
     background: #ff66b2;
     color: white;
-    padding: 0.8rem;
+    padding: 0.8rem 2rem; /* Adjust padding to make buttons look the same */
     border: none;
-    width: 100%;
     border-radius: 8px;
     font-size: 1rem;
     text-align: center;
     cursor: pointer;
     transition: 0.3s;
+    text-decoration: none; /* Remove underline for the "Go Back" link */
 }
 
+.btn:hover {
+    background: #e60073;
+}
 
-button:hover, .btn-primary:hover {
-    background: #e60073; 
+/* Button Container for Side-by-Side Display */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;  /* Space between buttons */
 }
 
 /* Go Back Button */
+.go-back-btn {
+    text-decoration: none;  /* Remove underline */
+    margin-left: 10px;  /* Space between the buttons */
+}
+
+/* Go Back Link Styling */
 a {
     display: inline-block;
     margin-top: 1.5rem;
@@ -144,7 +156,7 @@ a:hover {
         font-size: 1.3rem;
     }
 
-    .btn-primary, button {
+    .btn, button {
         font-size: 1rem;
     }
 }

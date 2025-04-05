@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results</title>
+</head>
+<body>
+    <h1>Analysis Results</h1>
+
+    <h2>Possible Challenge:</h2>
+    <p>{{ challenge_description }}</p>
+
+    <h2>Suggested Coping Mechanisms:</h2>
+    <ul>
+        {% for suggestion in coping_mechanisms %}
+            <li>{{ suggestion }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Local Resources in {{ location }}:</h2>
+    <ul>
+        {% for recommendation in local_recommendations %}
+            <li>{{ recommendation }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

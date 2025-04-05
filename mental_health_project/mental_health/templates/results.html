@@ -21,15 +21,23 @@
                 <li>{{ suggestion }}</li>
             {% endfor %}
         </ul>
+
         <h2>Local Resources in {{ location }}</h2>
         <ul>
             {% for recommendation in local_recommendations %}
-        <li>{{ recommendation }}</li>
-             {% endfor %}
+                <li>{{ recommendation }}</li>
+            {% endfor %}
         </ul>
 
-        <a href="{% url 'home' %}" class="go-back-link">Go Back</a>
-    </div>
+        <!-- Form for Download PDF -->
+        <form action="{% url 'download_pdf' %}" method="get" class="button-container">
+            <button type="submit" class="btn">Download PDF</button>
+        </form>
 
+        <!-- Go Back Button -->
+        <form action="{% url 'home' %}" method="get">
+            <button type="submit" class="btn go-back-btn">Go Back</button>
+        </form>
+    </div>
 </body>
 </html>
