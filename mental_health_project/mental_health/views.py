@@ -85,25 +85,28 @@ def get_local_recommendations(location, coping_mechanisms):
 
 def check_flags(flags, name, identified_challenges): 
     global FLAGS
-    lines = identified_challenges.text.strip().split(", ")
-    #make sure there is an instance of the user
-
+    # Remove .text since identified_challenges is already the string
+    lines = identified_challenges.strip().split(", ")
+    
     challenges = [] 
     for line in lines:
-    # Look for bullet points (start with "*") - add to recommendations line by line
+        # Look for bullet points (start with "*") - add to recommendations line by line
         if line.strip().startswith("*"):
             item = line.strip("* ").strip() 
             challenges.append(item)
+        else:
+            # Also add non-bullet items (the comma-separated challenges)
+            challenges.append(line.strip())
 
     report = [] #add to report if challenge has been detected more than 3 times. 
     #go through each extracted challenge and see if there is an instance for the user yet 
     for challenge in challenges: 
-        if challenge in flags[name]: 
-            FLAGS[name][challenge] +=1
+        if challenge in flags.get(name, {}): 
+            FLAGS[name][challenge] += 1
             if FLAGS[name][challenge] > 3: 
                 report.append(challenge)
         else: 
-            FLAGS[name][challenge] = 1
+            FLAGS.setdefault(name, {})[challenge] = 1
     
     return report 
 
@@ -114,8 +117,11 @@ def alert_sentence(high_alert):
     """
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(prompt)
-
-    return response
+    
+    # Return just the text content of the response 
+    if response and hasattr(response, 'text'):
+        return response.text
+    return "We've noticed some recurring patterns in your entries that you might want to be aware of."
 
 def journal_form_view(request):
     if request.method == 'POST':
@@ -132,21 +138,15 @@ def journal_form_view(request):
         local_recommendations = get_local_recommendations(location, coping_mechanisms)
         high_alert = check_flags(FLAGS, name, challenge_description)
 
-        if high_alert: 
+        if len(high_alert) > 1: 
             challenge_description = alert_sentence(high_alert)
 
+        print(FLAGS)
         # Store these results in the session for PDF generation
         request.session['challenge_description'] = challenge_description
         request.session['coping_mechanisms'] = coping_mechanisms
         request.session['location'] = location
         request.session['local_recommendations'] = local_recommendations
-
-        print("Data being sent to template:")
-        print(f"Name: {name}")
-        print(f"Location: {location}")
-        print(f"Challenge: {challenge_description}")
-        print(f"Coping: {coping_mechanisms}")
-        print(f"Recommendations: {local_recommendations}")
 
         return render(request, 'results.html', {
             'name': name,
