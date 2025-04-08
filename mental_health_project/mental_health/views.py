@@ -8,12 +8,13 @@ from django.views.decorators.csrf import csrf_exempt
 
 # Gemini API configuration 
 genai.configure(api_key="AIzaSyDqbfXw-dr0B__6lxd30fbsW9YixI2iKeo")
+FLAGS = {} 
 
 def analyze_journal_entry(entry):
     prompt = f"""
     Analyze the following journal entry for patterns related to mental health challenges.
     For the output: 
-    - Provide one sentence describing the possible mental health challenge. 
+    - Provide a comma seperated list of the mental health challenges present. 
     - List 2-3 coping mechanisms in a bulleted format.
     Entry: {entry}
     """
@@ -73,15 +74,48 @@ def get_local_recommendations(location, coping_mechanisms):
             if recommendations: 
                 return recommendations 
             else: 
-                return ["No local recommendations available."]
+                return ["No local recommendations."]
             
         except Exception as e:
             print(f"Error while extracting content: {e}")
             return ["No local recommendations available."]
     else:
         print("Error: Missing expected response structure.")
-        return ["No local recommendations available."]
+        return ["No local recommendations."]    
 
+def check_flags(flags, name, identified_challenges): 
+    global FLAGS
+    lines = identified_challenges.text.strip().split(", ")
+    #make sure there is an instance of the user
+
+    challenges = [] 
+    for line in lines:
+    # Look for bullet points (start with "*") - add to recommendations line by line
+        if line.strip().startswith("*"):
+            item = line.strip("* ").strip() 
+            challenges.append(item)
+
+    report = [] #add to report if challenge has been detected more than 3 times. 
+    #go through each extracted challenge and see if there is an instance for the user yet 
+    for challenge in challenges: 
+        if challenge in flags[name]: 
+            FLAGS[name][challenge] +=1
+            if FLAGS[name][challenge] > 3: 
+                report.append(challenge)
+        else: 
+            FLAGS[name][challenge] = 1
+    
+    return report 
+
+def alert_sentence(high_alert): 
+    prompt = f"""
+    The following mental health challenges have been demonstrated by the user more than 3 times: {high_alert}. 
+    Create a conscious statement to inform the user of their repeat behavior. 
+    """
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(prompt)
+
+    return response
 
 def journal_form_view(request):
     if request.method == 'POST':
@@ -89,15 +123,30 @@ def journal_form_view(request):
         location = request.POST.get('location')
         entry = request.POST.get('entry')
 
-        # Call to functions to get generative AI
+        #create nested dictionary -- name: challenge: number occuranced
+        if name not in FLAGS: 
+            FLAGS[name] = {} 
+        
+        # Call to functions to get generative AI response 
         challenge_description, coping_mechanisms = analyze_journal_entry(entry)
         local_recommendations = get_local_recommendations(location, coping_mechanisms)
+        high_alert = check_flags(FLAGS, name, challenge_description)
+
+        if high_alert: 
+            challenge_description = alert_sentence(high_alert)
 
         # Store these results in the session for PDF generation
         request.session['challenge_description'] = challenge_description
         request.session['coping_mechanisms'] = coping_mechanisms
         request.session['location'] = location
         request.session['local_recommendations'] = local_recommendations
+
+        print("Data being sent to template:")
+        print(f"Name: {name}")
+        print(f"Location: {location}")
+        print(f"Challenge: {challenge_description}")
+        print(f"Coping: {coping_mechanisms}")
+        print(f"Recommendations: {local_recommendations}")
 
         return render(request, 'results.html', {
             'name': name,
@@ -116,10 +165,8 @@ def download_pdf(request):
     location = request.session.get('location', '')
     local_recommendations = request.session.get('local_recommendations', [])
 
-    # Debugging: print the session data
     print(f"Retrieved from session: {challenge_description}, {coping_mechanisms}, {location}, {local_recommendations}")
 
-    # Render the HTML string with the retrieved data
     html_string = render_to_string('pdf_template.html', {
         'challenge_description': challenge_description,
         'coping_mechanisms': coping_mechanisms,
