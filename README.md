@@ -29,10 +29,14 @@ Seamless User Experience: Built using Django's form framework for ease of use an
 
 5. The system then cross-references the user's geographic location with the generated coping mechanisms to provide 2-3 relevant local resources in a bulleted list.
 
+The program will also track your identified mental health challenges on the backend, when the program sees the same challenge three or more times, the user is notified and given additional support recommendations. 
+
 ## How to Run it
 Clone the repository: git clone https://github.com/mw5762a/AIFinalProject.git
 
 Navigate to the project directory: cd AIFinalProject
+
+Download necessary libraries: pip install -r requirements.txt
 
 Run the server: python manage.py runserver
 
