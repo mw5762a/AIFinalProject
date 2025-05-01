@@ -15,7 +15,7 @@ def analyze_journal_entry(entry):
     Analyze the following journal entry for patterns related to mental health challenges.
     For the output: 
     - Provide a comma seperated list of the mental health challenges present. 
-    - List 2-3 coping mechanisms in a bulleted format.
+    - List 2-3 coping mechanisms in a bulleted format. The recommendation should be a short one sentence statement.
     Entry: {entry}
     """
     model = genai.GenerativeModel("gemini-1.5-flash")
@@ -46,7 +46,7 @@ def get_local_recommendations(location, coping_mechanisms):
     prompt = f"""
     The user is located at {location}. Given the following coping mechanisms: {coping_mechanisms}, 
     what are some local resources in the area that can aid these coping mechanisms?
-    Please provide 2-3 specific recommendations in a bulleted list format.
+    Please provide 2-3 specific recommendations in a bulleted list format. The recommendation should be no more than one sentence.
     """
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(prompt)
@@ -103,17 +103,18 @@ def check_flags(flags, name, identified_challenges):
     for challenge in challenges: 
         if challenge in flags.get(name, {}): 
             FLAGS[name][challenge] += 1
-            if FLAGS[name][challenge] > 3: 
+            if FLAGS[name][challenge] > 2: 
                 report.append(challenge)
         else: 
             FLAGS.setdefault(name, {})[challenge] = 1
-    
+
+    print(report)
     return report 
 
 def alert_sentence(high_alert): 
     prompt = f"""
-    The following mental health challenges have been demonstrated by the user more than 3 times: {high_alert}. 
-    Create a conscious statement to inform the user of their repeat behavior. 
+    The following mental health challenges have been demonstrated by the user more 3 or more times: {high_alert}. 
+    Create a short one sentence statement to inform the user of their repeat behavior. 
     """
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(prompt)
@@ -137,9 +138,11 @@ def journal_form_view(request):
         challenge_description, coping_mechanisms = analyze_journal_entry(entry)
         local_recommendations = get_local_recommendations(location, coping_mechanisms)
         high_alert = check_flags(FLAGS, name, challenge_description)
+        print(high_alert)
 
-        if len(high_alert) > 1: 
+        if len(high_alert) >= 1: 
             challenge_description = alert_sentence(high_alert)
+            print(f"challenge description: {challenge_description}")
 
         print(FLAGS)
         # Store these results in the session for PDF generation
